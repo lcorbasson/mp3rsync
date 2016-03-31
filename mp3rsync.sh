@@ -31,10 +31,14 @@ newertomp3() {
 	if [ "$infile" -nt "$outfile" ]; then
 		mkdir -p "$outdir"
 		if [[ "$infileext" == "mp3" ]]; then
-			cp "$infile" "$outfile"
+			cp "$infile" "$outfile" \
+				&& echo "$infile	$outfile	COPIED"
 		else
-			ffmpeg -nostats -hide_banner -loglevel error -i "$infile" -qscale:a 0 "$outfile"
+			ffmpeg -nostats -hide_banner -loglevel error -i "$infile" -qscale:a 0 "$outfile" \
+				&& echo "$infile	$outfile	COPIED"
 		fi
+	else
+		echo "$infile	$outfile	UP-TO-DATE"
 	fi
 }
 export -f newertomp3
