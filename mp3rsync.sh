@@ -1,7 +1,7 @@
 #!/bin/bash
 shopt -q -s nocasematch
 
-INPUTFORMATS=("aac" "flac" "m4a" "mp3" "ogg" "wav" "wma")
+#INPUTFORMATS=("aac" "flac" "m4a" "mp3" "ogg" "wav" "wma")
 
 [ $# -ne 2 ] && exit 1
 
@@ -9,6 +9,23 @@ INROOT="$(realpath "$1")/"
 OUTROOT="$(realpath "$2")/"
 export INROOT
 export OUTROOT
+
+getinputformats() {
+	local formats=( $( 
+		(
+			echo "${INPUTFORMATS[@]}"
+			ffmpeg -nostats -hide_banner -loglevel error -decoders \
+				| grep -e '^ A' | cut -f3 -d' '
+			ffmpeg -nostats -hide_banner -loglevel error -formats \
+				| grep -i -E '(audio|flac|musepack|ogg|pcm|voice|wavpack)' \
+				| grep -v -i -E '(video)' \
+				| sed -n -e 's,^ D[[:alnum:]]*  *\([^ ]*\) .*,\1,p'
+		) | sort -u
+		) )
+	parallel ffmpeg -v 0 -h demuxer={} ::: "${formats[@]}" \
+		| sed -n -e '/extensions/{s#[^:]*: *##;s#[,.]# #g;p}' \
+		| tr '[[:space:]]' '\n' | sort -u
+}
 
 findfiles() {
 	local search=()
@@ -44,6 +61,7 @@ newertomp3() {
 export -f newertomp3
 
 run() {
+	INPUTFORMATS=("$(getinputformats)")
 	pushd "$OUTROOT"
 	findfiles "$INROOT" \
 		| parallel newertomp3 {}
