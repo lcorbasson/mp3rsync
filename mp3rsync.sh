@@ -11,20 +11,21 @@ export INROOT
 export OUTROOT
 
 getinputformats() {
-	local formats=( $( 
-		(
-			echo "${INPUTFORMATS[@]}"
-			ffmpeg -nostats -hide_banner -loglevel error -decoders \
-				| grep -e '^ A' | cut -f3 -d' '
-			ffmpeg -nostats -hide_banner -loglevel error -formats \
-				| grep -i -E '(audio|flac|musepack|ogg|pcm|voice|wavpack)' \
-				| grep -v -i -E '(video)' \
-				| sed -n -e 's,^ D[[:alnum:]]*  *\([^ ]*\) .*,\1,p'
-		) | sort -u
-		) )
-	parallel ffmpeg -v 0 -h demuxer={} ::: "${formats[@]}" \
-		| sed -n -e '/extensions/{s#[^:]*: *##;s#[,.]# #g;p}' \
-		| tr '[[:space:]]' '\n' | sort -u
+	(
+		echo "${INPUTFORMATS[@]}"
+		ffmpeg -nostats -hide_banner -loglevel error -decoders \
+			| grep -e '^ A' | cut -f3 -d' ' | cut -f1 -d'_'
+		ffmpeg -nostats -hide_banner -loglevel error -formats \
+			| grep -i -E '(audio|flac|musepack|ogg|pcm|sound|speech|voice|wavpack)' \
+			| grep -v -i -E '(video)' \
+			| sed -n -e 's,^ D[[:alnum:]]*  *\([^ ]*\) .*,\1,p'
+		ffmpeg -nostats -hide_banner -loglevel error -formats \
+			| grep -i -E '(audio|flac|musepack|ogg|pcm|sound|speech|voice|wavpack)' \
+			| grep -v -i -E '(video)' \
+			| sed -n -e 's,^ D[[:alnum:]]*  *\([^ ]*\) .*,\1,p' \
+			| parallel ffmpeg -v 0 -h demuxer={} \
+			| sed -n -e '/extensions/{s#[^:]*: *##;s#[,.]# #g;p}'
+	) | tr '[[:space:]]' '\n' | sort -u
 }
 
 findfiles() {
@@ -61,7 +62,7 @@ newertomp3() {
 export -f newertomp3
 
 run() {
-	INPUTFORMATS=("$(getinputformats)")
+	INPUTFORMATS=( $(getinputformats) )
 	pushd "$OUTROOT"
 	findfiles "$INROOT" \
 		| parallel newertomp3 {}
