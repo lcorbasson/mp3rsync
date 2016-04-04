@@ -16,11 +16,11 @@ getinputformats() {
 		ffmpeg -nostats -hide_banner -loglevel error -decoders \
 			| grep -e '^ A' | cut -f3 -d' ' | cut -f1 -d'_'
 		ffmpeg -nostats -hide_banner -loglevel error -formats \
-			| grep -i -E '(audio|flac|musepack|ogg|pcm|sound|speech|voice|wavpack)' \
+			| grep -i -E '(3gpp amr|adts|asf|audible|audio|flac|musepack|ogg|openmg|pcm|quicktime|realmedia|sound|speech|sun au|voice|wavpack|yamaha smaf)' \
 			| grep -v -i -E '(video)' \
 			| sed -n -e 's,^ D[[:alnum:]]*  *\([^ ]*\) .*,\1,p'
 		ffmpeg -nostats -hide_banner -loglevel error -formats \
-			| grep -i -E '(audio|flac|musepack|ogg|pcm|sound|speech|voice|wavpack)' \
+			| grep -i -E '(3gpp amr|adts|asf|audible|audio|flac|musepack|ogg|openmg|pcm|quicktime|realmedia|sound|speech|sun au|voice|wavpack|yamaha smaf)' \
 			| grep -v -i -E '(video)' \
 			| sed -n -e 's,^ D[[:alnum:]]*  *\([^ ]*\) .*,\1,p' \
 			| parallel ffmpeg -v 0 -h demuxer={} \
